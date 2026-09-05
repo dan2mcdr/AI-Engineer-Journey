@@ -2,7 +2,7 @@
 
 > 8GB RAM • 1 hr/day • 5 days/week • 18 Weeks • 3 Production Projects
 
-Live Tracker: **[https://YOUR_USERNAME.github.io/ai-engineer-journey/](https://YOUR_USERNAME.github.io/ai-engineer-journey/)**
+Live Tracker: **[https://dan2mcdr.github.io/ai-engineer-journey/](https://YOUR_USERNAME.github.io/ai-engineer-journey/)**
 
 This is my public build-in-progress to become a hireable AI Engineer. No tutorial hell, only shipped artifacts.
 
