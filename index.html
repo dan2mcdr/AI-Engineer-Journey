@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Engineer Journey Tracker - Dan Edzel</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.5;min-height:100vh}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 80px}
+.header{border:1px solid #222;padding:20px;background:#111;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px}
+.h1{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+.sub{color:#888;font-size:13px;margin-top:6px;max-width:520px}
+.badge{font-size:11px;border:1px solid #333;padding:4px 8px;color:#aaa;background:#0f0f0f}
+.progress-outer{margin-top:20px;border:1px solid #222;background:#111;padding:16px}
+.progress-top{display:flex;justify-content:space-between;font-size:12px;color:#999;margin-bottom:8px}
+.bar{height:10px;background:#1a1a1a;border:1px solid #222;position:relative;overflow:hidden}
+.bar-fill{height:100%;background:#fff;width:0%;transition:width .3s ease}
+.phase{margin-top:36px}
+.phase-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;border-left:3px solid #fff;padding-left:12px}
+.phase-title{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em}
+.phase-weeks{font-size:11px;color:#666;border:1px solid #222;padding:2px 6px}
+table{width:100%;border-collapse:collapse;border:1px solid #222;background:#0f0f0f}
+th{text-align:left;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.08em;padding:10px 12px;border-bottom:1px solid #222;background:#111}
+td{padding:10px 12px;border-bottom:1px solid #1a1a1a;font-size:13px;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#141414}
+.check{width:18px;height:18px;accent-color:#fff;cursor:pointer}
+a{color:#fff;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#444}
+a:hover{text-decoration-color:#fff}
+.muted{color:#777}
+.small{font-size:12px}
+.grid{margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.wrap{padding:16px 14px 60px}th:nth-child(2),td:nth-child(2){display:none}}
+.card{border:1px solid #222;background:#0f0f0f;padding:16px}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;color:#aaa}
+.video{padding:10px 0;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between;gap:12px}
+.video:last-child{border-bottom:none}
+.tag{font-size:10px;border:1px solid #333;padding:2px 5px;color:#888}
+textarea{width:100%;min-height:140px;background:#0a0a0a;border:1px solid #222;color:#fff;padding:12px;font-family:inherit;font-size:13px;resize:vertical;outline:none}
+textarea:focus{border-color:#555}
+.btn{margin-top:10px;background:#fff;color:#000;border:none;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:#ddd}
+.btn:active{transform:translateY(1px)}
+.save-hint{font-size:11px;color:#666;margin-top:8px}
+.footer{margin-top:48px;padding-top:16px;border-top:1px solid #1a1a1a;color:#444;font-size:11px}
+code{background:#1a1a1a;padding:2px 5px;font-size:11px;border:1px solid #222}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <div class="h1">AI Engineer Journey Tracker — Dan Edzel</div>
+      <div class="sub">18-week roadmap from zero to AI Engineer. Built for GitHub Pages: no CDN, no framework, renders instantly. Check weeks, log daily, progress saves in your browser.</div>
+    </div>
+    <div class="badge">GITHUB PAGES READY • SINGLE FILE</div>
+  </div>
+
+  <div class="progress-outer">
+    <div class="progress-top"><span id="progress-text">0 / 18 completed</span><span id="progress-pct">0%</span></div>
+    <div class="bar"><div id="bar-fill" class="bar-fill"></div></div>
+    <div class="small muted" style="margin-top:8px">Source: <a href="https://github.com/rohitg00/ai-engineering-from-scratch" target="_blank">rohitg00/ai-engineering-from-scratch</a> — your tracker lives at /AI-Engineer-Journey/</div>
+  </div>
+
+  <div id="roadmap"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Video Library — EN + TL</h3>
+      <div id="videos"></div>
+      <div class="save-hint">EN = English, TL = Tagalog. Add your own links by editing this file.</div>
+    </div>
+    <div class="card">
+      <h3>Daily Log — Dan</h3>
+      <textarea id="daily-log" placeholder="Today I learned... Blockers... Tomorrow plan...&#10;&#10;Example:&#10;- Built FastAPI /sentiment&#10;- Docker image 210MB&#10;- Next: add pytest"></textarea>
+      <button class="btn" id="save-log">SAVE LOG (localStorage)</button>
+      <div class="save-hint" id="log-status">Auto-loaded from localStorage if exists.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Fixed version • Dark #0a0a0a • No external scripts • Works on https://dan2mcdr.github.io/AI-Engineer-Journey/ • All data stored in localStorage keys: ai_journey_checks, ai_journey_log<br>
+    If blank page before, cause was Tailwind/React CDN failure. This file uses only inline &lt;style&gt; and bottom &lt;script&gt;.
+  </div>
+</div>
+
+<script>
+// BULLETPROOF vanilla JS - runs immediately, no waiting
+(function(){
+  var WEEKS = [
+    {n:1,p:"Setup",t:"Dev Environment",f:"Python 3.11, Git, VS Code, venv, GitHub setup",l:"https://github.com/rohitg00/ai-engineering-from-scratch"},
+    {n:2,p:"Setup",t:"APIs & Prompts",f:"HTTP, JSON, REST, Prompt engineering",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-2"},
+    {n:3,p:"Setup",t:"Embeddings",f:"Vector basics, OpenAI embeddings, cosine sim",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-3"},
+    {n:4,p:"Sentiment API",t:"FastAPI Scaffold",f:"FastAPI structure, /sentiment endpoint v1",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-4"},
+    {n:5,p:"Sentiment API",t:"Model Tuning",f:"Fine-tune DistilBERT, eval metrics",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-5"},
+    {n:6,p:"Sentiment API",t:"Docker & Deploy",f:"Dockerfile, Fly.io / Render",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-6"},
+    {n:7,p:"Sentiment API",t:"CI/CD & Testing",f:"pytest, GitHub Actions, logging",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-7"},
+    {n:8,p:"Sentiment API",t:"Ship v1",f:"Docs, README, demo video, portfolio",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-8"},
+    {n:9,p:"RAG System",t:"Vector DB",f:"ChromaDB, collections, metadata",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-9"},
+    {n:10,p:"RAG System",t:"Chunking",f:"Text splitters, overlap, eval",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-10"},
+    {n:11,p:"RAG System",t:"Retrieval Pipeline",f:"Query embedding, top-k, reranking",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-11"},
+    {n:12,p:"RAG System",t:"RAG Evaluation",f:"Groundedness, faithfulness, RAGAS",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-12"},
+    {n:13,p:"RAG System",t:"RAG API",f:"Build /ask endpoint, streaming",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-13"},
+    {n:14,p:"RAG System",t:"Deploy RAG",f:"Prod RAG, cost tracking, caching",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-14"},
+    {n:15,p:"Agent",t:"Agent Frameworks",f:"LangChain / LangGraph, state machines",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-15"},
+    {n:16,p:"Agent",t:"Tools & Memory",f:"Function calling, tools, memory",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-16"},
+    {n:17,p:"Agent",t:"Guardrails",f:"Eval, safety, human-in-loop",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-17"},
+    {n:18,p:"Agent",t:"Capstone",f:"Final Agent, portfolio, job-ready demo",l:"https://github.com/rohitg00/ai-engineering-from-scratch#week-18"}
+  ];
+  var VIDEOS = [
+    {lang:"EN",title:"What is AI Engineering?",dur:"12:34",url:"https://www.youtube.com/results?search_query=what+is+ai+engineering"},
+    {lang:"EN",title:"FastAPI Crash Course",dur:"1:15:00",url:"https://www.youtube.com/results?search_query=fastapi+crash+course"},
+    {lang:"EN",title:"RAG Explained - From Scratch",dur:"28:42",url:"https://www.youtube.com/results?search_query=rag+explained"},
+    {lang:"EN",title:"LangGraph Agents Tutorial",dur:"45:10",url:"https://www.youtube.com/results?search_query=langgraph+agents"},
+    {lang:"TL",title:"AI Engineer Roadmap Tagalog",dur:"18:20",url:"https://www.youtube.com/results?search_query=ai+engineer+roadmap+tagalog"},
+    {lang:"TL",title:"Python para sa AI - Tagalog",dur:"32:15",url:"https://www.youtube.com/results?search_query=python+tagalog+tutorial"}
+  ];
+  var LS_CHECKS = "ai_journey_checks";
+  var LS_LOG = "ai_journey_log";
+
+  function loadChecks(){
+    try{var d=localStorage.getItem(LS_CHECKS);return d?JSON.parse(d):{}}catch(e){return{}}
+  }
+  function saveChecks(obj){
+    try{localStorage.setItem(LS_CHECKS, JSON.stringify(obj));}catch(e){}
+  }
+  var checks = loadChecks();
+
+  var roadmapEl = document.getElementById("roadmap");
+  var groups = {"Setup":[],"Sentiment API":[],"RAG System":[],"Agent":[]};
+  WEEKS.forEach(function(w){ groups[w.p].push(w); });
+
+  var phaseOrder = [
+    {key:"Setup",label:"Phase 1 — Setup",weeks:"Weeks 1-3"},
+    {key:"Sentiment API",label:"Phase 2 — Sentiment API",weeks:"Weeks 4-8"},
+    {key:"RAG System",label:"Phase 3 — RAG System",weeks:"Weeks 9-14"},
+    {key:"Agent",label:"Phase 4 — Agent",weeks:"Weeks 15-18"}
+  ];
+
+  var html="";
+  phaseOrder.forEach(function(ph){
+    var ws = groups[ph.key];
+    html+='<div class="phase"><div class="phase-head"><div class="phase-title">'+ph.label+'</div><div class="phase-weeks">'+ph.weeks+'</div></div>';
+    html+='<table><thead><tr><th style="width:56px">Done</th><th style="width:54px">Week</th><th>Focus</th><th style="width:110px">Lesson</th></tr></thead><tbody>';
+    ws.forEach(function(w){
+      var checked = checks["w"+w.n] ? "checked" : "";
+      html+='<tr><td><input type="checkbox" class="check" data-week="w'+w.n+'" '+checked+'></td><td><span class="muted small">W'+w.n+'</span><div style="font-weight:700">'+w.t+'</div></td><td><div>'+w.f+'</div><div class="small muted">'+w.p+'</div></td><td class="small"><a href="'+w.l+'" target="_blank">rohitg00 lesson →</a></td></tr>';
+    });
+    html+='</tbody></table></div>';
+  });
+  roadmapEl.innerHTML = html;
+
+  var videosEl = document.getElementById("videos");
+  var vHtml="";
+  VIDEOS.forEach(function(v){
+    vHtml+='<div class="video"><div><span class="tag">'+v.lang+'</span> <a href="'+v.url+'" target="_blank">'+v.title+'</a><div class="small muted">'+v.dur+'</div></div><div class="small">▶</div></div>';
+  });
+  videosEl.innerHTML = vHtml;
+
+  function updateProgress(){
+    var total=18, done=0;
+    for(var i=1;i<=18;i++){ if(checks["w"+i]) done++; }
+    var pct = Math.round(done/total*100);
+    document.getElementById("progress-text").textContent = done+" / "+total+" completed";
+    document.getElementById("progress-pct").textContent = pct+"%";
+    document.getElementById("bar-fill").style.width = pct+"%";
+  }
+  updateProgress();
+
+  document.addEventListener("change", function(e){
+    if(e.target && e.target.classList.contains("check")){
+      var wk = e.target.getAttribute("data-week");
+      checks[wk] = e.target.checked;
+      saveChecks(checks);
+      updateProgress();
+    }
+  });
+
+  var logEl = document.getElementById("daily-log");
+  var statusEl = document.getElementById("log-status");
+  try{
+    var savedLog = localStorage.getItem(LS_LOG);
+    if(savedLog) logEl.value = savedLog;
+  }catch(e){}
+  document.getElementById("save-log").addEventListener("click", function(){
+    try{
+      localStorage.setItem(LS_LOG, logEl.value);
+      statusEl.textContent = "Saved at " + new Date().toLocaleTimeString() + " — localStorage";
+      setTimeout(function(){ statusEl.textContent="Auto-loaded from localStorage if exists."; }, 2500);
+    }catch(e){
+      statusEl.textContent = "Save failed — storage full or blocked.";
+    }
+  });
+})();
+</script>
+</body>
+</html>
