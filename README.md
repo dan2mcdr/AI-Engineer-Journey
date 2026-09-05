@@ -4,7 +4,7 @@ An interactive, browser-based 90-day learning curriculum and progress dashboard 
 
 The roadmap enforces an **80% building / 20% theory** split, focusing on practical client outcomes, automation workflows, LLM integrations, and production-grade deployments.
 
-* **Live Tracker:** https://https://dan2mcdr.github.io/AI-Engineer-Journey/
+* **Live Tracker:** https://dan2mcdr.github.io/AI-Engineer-Journey/
 
 ---
 
