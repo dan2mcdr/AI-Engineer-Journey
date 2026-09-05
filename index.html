@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Engineering Journey Tracker</title>
+<style>
+  /* ── TOKENS ───────────────────────────────────────────────── */
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --border:    #21262d;
+    --accent:    #58a6ff;
+    --accent2:   #3fb950;
+    --accent3:   #e3b341;
+    --accent4:   #f78166;
+    --text:      #e6edf3;
+    --muted:     #8b949e;
+    --done-bg:   #0d2a18;
+    --done-bd:   #196c2e;
+    --active-bg: #0c2140;
+    --active-bd: #1f6feb;
+    --lock-bg:   #1a1a1a;
+    --lock-bd:   #30363d;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --radius:    8px;
+  }
+
+  /* ── RESET ───────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── LAYOUT ──────────────────────────────────────────────── */
+  .shell {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "hd hd" "nav main";
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ──────────────────────────────────────────────── */
+  header {
+    grid-area: hd;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-weight: 700; font-size: 17px; }
+  .logo-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .global-progress-bar {
+    width: 180px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .global-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 99px;
+    transition: width .5s ease;
+  }
+  .global-pct { font-size: 13px; color: var(--muted); font-family: var(--font-mono); }
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 12px;
+    transition: border-color .2s, color .2s;
+  }
+  .reset-btn:hover { border-color: var(--accent4); color: var(--accent4); }
+
+  /* ── SIDEBAR ─────────────────────────────────────────────── */
+  nav {
+    grid-area: nav;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 73px;
+    height: calc(100vh - 73px);
+    overflow-y: auto;
+  }
+  .nav-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    padding: 0 20px 8px;
+    font-weight: 600;
+  }
+  .stage-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background .15s, border-color .15s;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .stage-link:hover { background: rgba(88,166,255,.06); color: var(--text); }
+  .stage-link.active-nav { border-left-color: var(--accent); background: rgba(88,166,255,.1); color: var(--text); }
+  .stage-link.done-nav { border-left-color: var(--accent2); color: var(--accent2); }
+  .stage-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .stage-link.done-nav .stage-dot { background: var(--accent2); }
+  .stage-link.active-nav .stage-dot { background: var(--accent); }
+  .stage-pct {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* ── MAIN CONTENT ─────────────────────────────────────────── */
+  main {
+    grid-area: main;
+    padding: 32px 36px;
+    overflow-y: auto;
+  }
+
+  /* ── HERO BANNER ─────────────────────────────────────────── */
+  .hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .hero h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .hero p { color: var(--muted); font-size: 14px; max-width: 520px; }
+  .stat-row { display: flex; gap: 24px; margin-top: 18px; }
+  .stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    min-width: 110px;
+  }
+  .stat-val { font-size: 24px; font-weight: 700; font-family: var(--font-mono); color: var(--accent); }
+  .stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+  .mantra {
+    background: linear-gradient(135deg, rgba(88,166,255,.12), rgba(63,185,80,.08));
+    border: 1px solid rgba(88,166,255,.2);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--accent);
+    max-width: 300px;
+    text-align: center;
+  }
+
+  /* ── STAGE SECTION ───────────────────────────────────────── */
+  .stage-section {
+    margin-bottom: 48px;
+    scroll-margin-top: 20px;
+  }
+  .stage-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .stage-badge {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    padding: 3px 9px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .badge-locked { background: var(--lock-bg); color: var(--muted); border: 1px solid var(--lock-bd); }
+  .badge-active { background: var(--active-bg); color: var(--accent); border: 1px solid var(--active-bd); }
+  .badge-done   { background: var(--done-bg);   color: var(--accent2); border: 1px solid var(--done-bd); }
+
+  .stage-title { font-size: 18px; font-weight: 700; }
+  .stage-subtitle { font-size: 13px; color: var(--muted); margin-left: auto; }
+  .stage-goal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--accent3);
+  }
+  .stage-goal strong { color: var(--text); }
+
+  /* ── WEEK BLOCK ──────────────────────────────────────────── */
+  .week-block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .week-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+  }
+  .week-header:hover { background: rgba(88,166,255,.06); }
+  .week-label { font-size: 14px; font-weight: 600; }
+  .week-days-info { font-size: 12px; color: var(--muted); }
+  .week-prog-wrap { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .week-prog-bar {
+    width: 80px; height: 4px;
+    background: var(--border); border-radius: 99px; overflow: hidden;
+  }
+  .week-prog-fill {
+    height: 100%; background: var(--accent2); border-radius: 99px; transition: width .4s;
+  }
+  .week-pct-lbl { font-family: var(--font-mono); font-size: 11px; color: var(--muted); width: 30px; text-align: right; }
+  .chevron { font-size: 11px; color: var(--muted); transition: transform .25s; }
+  .week-block.open .chevron { transform: rotate(90deg); }
+
+  .week-body { display: none; padding: 0 18px 18px; }
+  .week-block.open .week-body { display: block; }
+
+  /* ── DAY CARD ────────────────────────────────────────────── */
+  .day-card {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .day-card.completed { border-color: var(--done-bd); background: var(--done-bg); }
+
+  .day-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+  }
+  .day-check {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all .2s;
+    margin-top: 1px;
+    background: none;
+    color: transparent;
+  }
+  .day-card.completed .day-check {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff;
+  }
+  .day-check:hover { border-color: var(--accent2); }
+
+  .day-info { flex: 1; min-width: 0; }
+  .day-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .day-topics { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .day-meta {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;
+  }
+  .tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .tag-theory  { background: rgba(227,179,65,.15); color: var(--accent3); }
+  .tag-build   { background: rgba(63,185,80,.15);  color: var(--accent2); }
+  .tag-project { background: rgba(88,166,255,.15); color: var(--accent); }
+  .tag-review  { background: rgba(247,129,102,.15);color: var(--accent4); }
+
+  /* tasks list */
+  .task-list {
+    padding: 0 16px 14px 52px;
+    display: none;
+  }
+  .day-card.expanded .task-list { display: block; }
+  .day-expand-btn {
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    margin-top: 6px;
+    display: flex; align-items: center; gap: 4px;
+    padding: 0;
+  }
+  .day-expand-btn:hover { color: var(--accent); }
+
+  .task-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    line-height: 1.5;
+  }
+  .task-bullet { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+  .resource-link {
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(88,166,255,.08);
+    border: 1px solid rgba(88,166,255,.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    transition: background .15s;
+  }
+  .resource-link:hover { background: rgba(88,166,255,.16); text-decoration: none; }
+  .resources-block { margin-top: 10px; }
+  .resources-title { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+
+  /* ── DIVIDER ─────────────────────────────────────────────── */
+  hr.stage-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  /* ── MOTIVATIONAL BOTTOM ─────────────────────────────────── */
+  .footer-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    text-align: center;
+    margin-top: 48px;
+  }
+  .footer-card h2 { font-size: 18px; margin-bottom: 8px; }
+  .footer-card p { color: var(--muted); font-size: 14px; }
+
+  /* ── SCROLLBAR ───────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  @media (max-width: 768px) {
+    .shell { grid-template-columns: 1fr; grid-template-areas: "hd" "main"; }
+    nav { display: none; }
+    main { padding: 20px 16px; }
+    .hero { flex-direction: column; }
+    .stat-row { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ═══════════════════════════════════ HEADER ════════════════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">AI Engineer Journey</div>
+      <div class="logo-sub">Zero → Job-Ready Freelancer</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="global-progress-bar">
+      <div class="global-progress-fill" id="globalFill" style="width:0%"></div>
+    </div>
+    <span class="global-pct" id="globalPct">0%</span>
+    <button class="reset-btn" onclick="resetAll()">Reset All</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════ SIDEBAR ═══════════════════════════ -->
+<nav>
+  <div class="nav-label">Stages</div>
+  <div id="stageNav"></div>
+</nav>
+
+<!-- ═══════════════════════════════════ MAIN ══════════════════════════════ -->
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <h1>Your AI Engineering Roadmap 🚀</h1>
+    <p>From Business/Admin/Finance background to freelance AI Engineer. 80% building, 20% theory. Every day moves the needle.</p>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-val" id="statDays">0</div>
+        <div class="stat-lbl">Days Done</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statTotal" style="color:var(--muted)">90</div>
+        <div class="stat-lbl">Total Days</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="statStreak" style="color:var(--accent3)">0🔥</div>
+        <div class="stat-lbl">Day Streak</div>
+      </div>
+    </div>
+  </div>
+  <div class="mantra">"Understand the problem → design the solution → build it → ship it → get paid."</div>
+</div>
+
+<!-- ═══════════════════ STAGE CONTENT INJECTED BY JS ════════════════════ -->
+<div id="stageContent"></div>
+
+<div class="footer-card">
+  <h2>🏆 The Final Goal</h2>
+  <p>Analyze a client's problem → Design an AI solution → Build it → Deploy it → Present it → Get paid.<br>You are not done when lessons are done. You are done when clients pay you.</p>
+</div>
+
+</main>
+</div><!-- .shell -->
+
+<script>
+/* ═════════════════════════════════════════════════════════════════════════
+   DATA — 90-day curriculum, 10 stages
+   ════════════════════════════════════════════════════════════════════════ */
+const stages = [
+{
+  id:"s0", label:"Stage 0: Orientation", days:"Days 1–7",
+  goal:"Understand what AI Engineering actually IS and why each piece exists.",
+  weeks:[{
+    wLabel:"Week 1 — The AI Engineering Ecosystem",
+    days:[
+      { day:1, label:"What is AI Engineering?",
+        topics:"AI automation vs AI research • How AI engineers make money • The Upwork AI landscape",
+        tags:["theory"],
+        tasks:["Read: What do AI engineers actually do for clients?","Watch CS Dojo intro to Python (30 min)","Write down 3 real client problems AI could solve"],
+        resources:[
+          {label:"Andrej Karpathy – What is AI Eng",url:"https://www.youtube.com/watch?v=zjkBMFhNj_g"},
+          {label:"Upwork AI Jobs Browse",url:"https://www.upwork.com/nx/search/jobs/?q=AI+automation"},
+        ]
+      },
+      { day:2, label:"APIs — The Waiter Analogy",
+        topics:"What an API is • REST basics • JSON format • Real API demo",
+        tags:["theory","build"],
+        tasks:["Watch: What is an API? (Fireship 6 min)","Call a free weather or joke API in browser","Read one real API documentation page (OpenWeatherMap)"],
+        resources:[
+          {label:"Fireship – APIs in 100 Seconds",url:"https://www.youtube.com/watch?v=ByGJQzlzxQg"},
+          {label:"OpenWeatherMap Free API",url:"https://openweathermap.org/api"},
+        ]
+      },
+      { day:3, label:"n8n — No-Code Automation First Look",
+        topics:"What n8n is • How workflow nodes connect • Install n8n locally",
+        tags:["build"],
+        tasks:["Install n8n via npm OR use n8n.cloud free tier","Build your first workflow: receive a webhook → send a Telegram message","Screenshot your working workflow"],
+        resources:[
+          {label:"n8n Official Docs",url:"https://docs.n8n.io/"},
+          {label:"n8n YouTube Channel",url:"https://www.youtube.com/@n8n-io"},
+        ]
+      },
+      { day:4, label:"Python — Why Engineers Use It",
+        topics:"Install Python • Run first script • Variables • print() • input()",
+        tags:["build"],
+        tasks:["Install Python 3.11+ and VS Code","Write a script that asks your name and says hello","Run it. Fix the error. Run it again."],
+        resources:[
+          {label:"Python for Everybody – Full Course",url:"https://www.youtube.com/watch?v=8DvywoWv6fI"},
+          {label:"Official Python Docs",url:"https://docs.python.org/3/tutorial/"},
+        ]
+      },
+      { day:5, label:"Git & GitHub — Your Portfolio Home",
+        topics:"What Git is • init, commit, push • GitHub account • README",
+        tags:["build"],
+        tasks:["Create a GitHub account","Create repo called ai-engineering-journey","Push your Day 4 Python script • Write a README.md"],
+        resources:[
+          {label:"Git & GitHub for Beginners (freeCodeCamp)",url:"https://www.youtube.com/watch?v=RGOj5yH7evk"},
+          {label:"GitHub Quickstart",url:"https://docs.github.com/en/get-started/quickstart"},
+        ]
+      },
+      { day:6, label:"LLMs — What They Actually Are",
+        topics:"Tokens • temperature • context window • system vs user messages • hallucination",
+        tags:["theory"],
+        tasks:["Read: What is a large language model? (Cloudflare simple explanation)","Play with OpenRouter free tier — send your first API message","Write down: what is temperature in your own words?"],
+        resources:[
+          {label:"Cloudflare – What is an LLM?",url:"https://www.cloudflare.com/learning/ai/what-is-a-large-language-model/"},
+          {label:"OpenRouter Free Tier",url:"https://openrouter.ai/"},
+          {label:"Andrej Karpathy – Intro to LLMs",url:"https://www.youtube.com/watch?v=zjkBMFhNj_g"},
+        ]
+      },
+      { day:7, label:"Week 1 Review & First Mini-Project",
+        topics:"Connect everything: API + n8n + send a message with AI",
+        tags:["project","review"],
+        tasks:["Build: n8n workflow that takes a user message, sends it to an LLM (OpenRouter/Gemini free), returns the reply via Telegram","Push workflow JSON to GitHub","Write 5 bullet points: what you learned this week"],
+        resources:[
+          {label:"n8n AI nodes docs",url:"https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.openai/"},
+        ]
+      },
+    ]
+  }]
+},
+{
+  id:"s1", label:"Stage 1: Python Foundations", days:"Days 8–21",
+  goal:"Write small, useful Python programs. Manage projects with GitHub. Debug your own code.",
+  weeks:[
+    {
+      wLabel:"Week 2 — Python Core (Part 1)",
+      days:[
+        { day:8, label:"Strings & Numbers",
+          topics:"String methods • f-strings • int vs float • type conversion • math operators",
+          tags:["theory","build"],
+          tasks:["Build a simple invoice calculator in Python","Format currency output with f-strings","Commit to GitHub"],
+          resources:[{label:"Python Strings – Corey Schafer",url:"https://www.youtube.com/watch?v=k9TUPpGqYTo"}]
+        },
+        { day:9, label:"Lists & Loops",
+          topics:"Lists • for loops • while loops • range() • enumerate()",
+          tags:["build"],
+          tasks:["Build a task list manager: add, remove, display tasks","Use a for loop to print each task numbered","CHALLENGE: Add a 'done' toggle"],
+          resources:[{label:"Python Lists – Corey Schafer",url:"https://www.youtube.com/watch?v=W8KRzm-HUcc"}]
+        },
+        { day:10, label:"Dictionaries & JSON",
+          topics:"Dictionaries • key/value • nested dicts • JSON parse/stringify",
+          tags:["build"],
+          tasks:["Create a dict representing a client lead: name, email, budget, status","Convert it to JSON string and back","Print each field clearly"],
+          resources:[
+            {label:"Python Dicts – Corey Schafer",url:"https://www.youtube.com/watch?v=daefaLgNkw0"},
+            {label:"JSON in Python – Real Python",url:"https://realpython.com/python-json/"},
+          ]
+        },
+        { day:11, label:"Conditions & Functions",
+          topics:"if/elif/else • comparison operators • def • return • parameters",
+          tags:["build"],
+          tasks:["Build a lead scoring function: takes budget + urgency → returns score","Test it with 5 different inputs","Add docstring to your function"],
+          resources:[{label:"Python Functions – Corey Schafer",url:"https://www.youtube.com/watch?v=9Os0o3wzS_I"}]
+        },
+        { day:12, label:"Error Handling & Files",
+          topics:"try/except • common errors • read/write files • .env basics",
+          tags:["build"],
+          tasks:["Read a CSV file of fake leads with Python","Handle the FileNotFoundError gracefully","Save a filtered list to a new file"],
+          resources:[{label:"Python Exception Handling",url:"https://www.youtube.com/watch?v=NIWwJbo-9_8"}]
+        },
+        { day:13, label:"HTTP Requests with Python",
+          topics:"requests library • GET/POST • headers • API keys • .env secrets",
+          tags:["build"],
+          tasks:["Install requests library","Call a free public API (OpenWeatherMap or REST Countries)","Parse the JSON response and print useful data"],
+          resources:[
+            {label:"Python Requests – Corey Schafer",url:"https://www.youtube.com/watch?v=tb8gHvYlCFs"},
+            {label:"requests docs",url:"https://requests.readthedocs.io/en/latest/"},
+          ]
+        },
+        { day:14, label:"Week 2 Mini-Project: Lead Enricher",
+          topics:"Combine: dict + functions + HTTP + JSON + file I/O",
+          tags:["project"],
+          tasks:["Build: read leads from CSV, call an API to validate/enrich each email or company, save enriched results","Push to GitHub with a README explaining what it does","Explain: what would a client pay for this?"],
+          resources:[{label:"Hunter.io Email API (free tier)",url:"https://hunter.io/api"}]
+        },
+      ]
+    },
+    {
+      wLabel:"Week 3 — Python Core (Part 2) + Git Workflow",
+      days:[
+        { day:15, label:"Modules & Packages",
+          topics:"import • pip • virtual environments • requirements.txt",
+          tags:["build"],
+          tasks:["Create a venv for your project","Install 3 packages: requests, python-dotenv, openai","Generate requirements.txt"],
+          resources:[{label:"Python Modules – Corey Schafer",url:"https://www.youtube.com/watch?v=CqvZ3vGoGs0"}]
+        },
+        { day:16, label:"Classes — Just Enough",
+          topics:"class • __init__ • methods • when to use a class",
+          tags:["theory","build"],
+          tasks:["Build a LeadContact class with name, email, score, qualify() method","Create 3 instances and call qualify() on each"],
+          resources:[{label:"Python OOP – Corey Schafer",url:"https://www.youtube.com/watch?v=ZDa-Z5JzLYM"}]
+        },
+        { day:17, label:"Git Branching & Collaboration",
+          topics:"branches • merge • .gitignore • pull requests",
+          tags:["build"],
+          tasks:["Create a feature branch for your Lead Enricher","Add a new feature on the branch","Merge it back to main via a pull request"],
+          resources:[{label:"Git Branching – Atlassian",url:"https://www.atlassian.com/git/tutorials/using-branches"}]
+        },
+        { day:18, label:"Debugging Systematically",
+          topics:"print debugging • VS Code debugger • reading tracebacks • Google the error",
+          tags:["build","review"],
+          tasks:["Intentionally break 3 things in your script and fix them","Use VS Code debugger with breakpoints once","Document: what was the error, what caused it, how you fixed it"],
+          resources:[{label:"VS Code Python Debugging",url:"https://code.visualstudio.com/docs/python/debugging"}]
+        },
+        { day:19, label:"Calling an LLM from Python",
+          topics:"openai library • messages array • system prompt • response parsing",
+          tags:["build"],
+          tasks:["Call Claude or GPT-4o-mini from Python with a system prompt","Pass a lead description, get back a qualification summary","Print the result"],
+          resources:[
+            {label:"Anthropic Python SDK",url:"https://github.com/anthropics/anthropic-sdk-python"},
+            {label:"OpenAI Python Quickstart",url:"https://platform.openai.com/docs/quickstart"},
+          ]
+        },
+        { day:20, label:"Environment Variables & Security",
+          topics:"dotenv • .gitignore for .env • never commit API keys • secrets management",
+          tags:["theory","build"],
+          tasks:["Add dotenv to your project","Move ALL API keys to .env","Verify .env is in .gitignore • Push to GitHub safely"],
+          resources:[{label:"python-dotenv docs",url:"https://pypi.org/project/python-dotenv/"}]
+        },
+        { day:21, label:"Week 3 Project: AI Lead Qualifier (v1)",
+          topics:"Portfolio Project 1 begins: Python + LLM + CSV",
+          tags:["project"],
+          tasks:["Build: read leads from CSV → send each to LLM with a qualification prompt → output a scored list","Add error handling and retry logic","Write README.md with business value explanation","Push to GitHub"],
+          resources:[{label:"OpenRouter free models",url:"https://openrouter.ai/models?q=free"}]
+        },
+      ]
+    }
+  ]
+},
+{
+  id:"s2", label:"Stage 2: API Engineering", days:"Days 22–35",
+  goal:"Connect different software systems. Read and call any API. Handle auth, errors, and pagination.",
+  weeks:[
+    {
+      wLabel:"Week 4 — HTTP & REST APIs Deep Dive",
+      days:[
+        { day:22, label:"HTTP Methods & Status Codes",
+          topics:"GET POST PUT PATCH DELETE • 200/201/400/401/403/404/429/500 • headers",
+          tags:["theory","build"],
+          tasks:["Use Postman or Insomnia to test a real API (GitHub or Notion)","Try each method type","Read status code meanings and document them"],
+          resources:[
+            {label:"HTTP Crash Course – Traversy",url:"https://www.youtube.com/watch?v=iYM2zFP3Zn0"},
+            {label:"Postman",url:"https://www.postman.com/"},
+          ]
+        },
+        { day:23, label:"Authentication: API Keys & Bearer Tokens",
+          topics:"API key in header • Bearer token • Basic auth • OAuth concept",
+          tags:["build"],
+          tasks:["Call 2 different APIs using different auth methods","Document the auth pattern for each","Add both API keys to .env"],
+          resources:[{label:"API Authentication – Postman Learning",url:"https://learning.postman.com/docs/sending-requests/authorization/"}]
+        },
+        { day:24, label:"Webhooks — APIs That Call You",
+          topics:"What a webhook is • ngrok • receive a webhook in Python",
+          tags:["build"],
+          tasks:["Install ngrok or use Cloudflare Tunnel","Build a tiny Flask server to receive a webhook","Trigger it from n8n or a test tool"],
+          resources:[
+            {label:"Webhooks explained – freeCodeCamp",url:"https://www.freecodecamp.org/news/what-is-a-webhook/"},
+            {label:"ngrok",url:"https://ngrok.com/"},
+          ]
+        },
+        { day:25, label:"Rate Limits & Pagination",
+          topics:"rate limiting • retry-after header • pagination patterns • cursor vs page",
+          tags:["build"],
+          tasks:["Call a paginated API (GitHub repos or Notion database)","Write a loop to fetch ALL pages","Add a rate limit handler with exponential backoff"],
+          resources:[{label:"Pagination Patterns – APIs You Won't Hate",url:"https://apisyouwonthate.com/blog/api-pagination-filtering-sorting-and-how-to-do-it/"}]
+        },
+        { day:26, label:"Google Sheets API — Business Glue",
+          topics:"gspread library • read/write Sheets • service account auth",
+          tags:["build"],
+          tasks:["Set up Google Cloud service account","Use gspread to write data to a Sheet","Read a sheet and print rows as dicts"],
+          resources:[
+            {label:"gspread docs",url:"https://docs.gspread.org/"},
+            {label:"Google Sheets API Python Tutorial",url:"https://www.youtube.com/watch?v=4ssigWV_tXI"},
+          ]
+        },
+        { day:27, label:"Telegram Bot API",
+          topics:"BotFather • send message • receive message • inline buttons",
+          tags:["build"],
+          tasks:["Create a Telegram bot","Send a formatted message from Python","Build a command /qualify that triggers your lead scorer"],
+          resources:[
+            {label:"Telegram Bot API",url:"https://core.telegram.org/bots/api"},
+            {label:"python-telegram-bot",url:"https://python-telegram-bot.org/"},
+          ]
+        },
+        { day:28, label:"Week 4 Project: Gmail → AI → Sheets",
+          topics:"Email parsing + LLM classification + spreadsheet output",
+          tags:["project"],
+          tasks:["n8n workflow: Gmail trigger → extract email body → Claude/GPT categorize → write result to Google Sheets","Handle errors • Add logging","Document as a portfolio piece: who would pay for this?"],
+          resources:[
+            {label:"n8n Gmail node",url:"https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.gmail/"},
+          ]
+        },
+      ]
+    },
+    {
+      wLabel:"Week 5 — API Projects & Real Integrations",
+      days:[
+        { day:29, label:"Notion API",
+          topics:"Database items • create/update pages • filtering • relations",
+          tags:["build"],
+          tasks:["Connect to your Notion workspace","Create a lead record from Python","Build a filter to find leads with budget > $1000"],
+          resources:[{label:"Notion API Docs",url:"https://developers.notion.com/"}]
+        },
+        { day:30, label:"Slack API",
+          topics:"Incoming webhooks • Block Kit • slash commands",
+          tags:["build"],
+          tasks:["Send a formatted Slack message when a lead is qualified","Use Block Kit to make it look professional"],
+          resources:[{label:"Slack Block Kit Builder",url:"https://app.slack.com/block-kit-builder"}]
+        },
+        { day:31, label:"Web Scraping Basics (Ethical)",
+          topics:"requests + BeautifulSoup • robots.txt • rate limiting • legal considerations",
+          tags:["build"],
+          tasks:["Scrape a public job board (just titles and companies)","Respect robots.txt","Save to JSON"],
+          resources:[
+            {label:"BeautifulSoup docs",url:"https://www.crummy.com/software/BeautifulSoup/bs4/doc/"},
+            {label:"Web Scraping with Python – freeCodeCamp",url:"https://www.youtube.com/watch?v=XVv6mJpFOb0"},
+          ]
+        },
+        { day:32, label:"Airtable & CRM Concepts",
+          topics:"Airtable API • CRM tables • leads pipeline • CRUD operations",
+          tags:["build"],
+          tasks:["Connect to Airtable","Build a pipeline view: lead stages","Programmatically move a lead from 'new' to 'qualified'"],
+          resources:[{label:"Airtable Web API",url:"https://airtable.com/developers/web"}]
+        },
+        { day:33, label:"Combining APIs: Multi-Step Workflow",
+          topics:"Chain 3+ APIs together • data transformation between steps",
+          tags:["build"],
+          tasks:["Job board scrape → LLM score each listing → send top 3 to Telegram","Every step in Python with error handling"],
+          resources:[]
+        },
+        { day:34, label:"API Error Handling Patterns",
+          topics:"Retry with backoff • circuit breaker concept • fallback strategies • logging",
+          tags:["theory","build"],
+          tasks:["Add retry logic to your previous project","Log every API call with timestamp and status","Simulate a failure and verify your fallback works"],
+          resources:[]
+        },
+        { day:35, label:"Week 5 Project: AI Lead Qualification (v2)",
+          topics:"UPGRADE your Stage 1 project: add webhook trigger + Notion output + Telegram notification",
+          tags:["project"],
+          tasks:["New lead arrives via webhook → LLM qualifies → saved to Notion → Slack/Telegram alert","Full error handling • README update","This is Portfolio Project 1 — make it presentable"],
+          resources:[]
+        },
+      ]
+    }
+  ]
+},
+{
+  id:"s3", label:"Stage 3: Automation Engineering", days:"Days 36–49",
+  goal:"Build production-style business automations. Master n8n. Deliver real client workflows.",
+  weeks:[
+    {
+      wLabel:"Week 6 — n8n Mastery",
+      days:[
+        { day:36, label:"n8n Architecture Deep Dive",
+          topics:"Triggers • nodes • expressions • data flow • credentials • sub-workflows",
+          tags:["theory","build"],
+          tasks:["Map all node types in n8n on a whiteboard/Notion","Build a 10-node workflow from scratch","Use a Sub-Workflow node to modularize"],
+          resources:[{label:"n8n Full Tutorial – Leon van Zyl",url:"https://www.youtube.com/watch?v=1MwSoB0gnM4"}]
+        },
+        { day:37, label:"n8n Expressions & Data Transform",
+          topics:"{{ $json }} • IF node • Switch • Code node • Merge • Loop",
+          tags:["build"],
+          tasks:["Use IF and Switch to route leads by score","Use Code node to transform data with JS","Merge 2 branches and deduplicate"],
+          resources:[{label:"n8n Expressions Docs",url:"https://docs.n8n.io/code/expressions/"}]
+        },
+        { day:38, label:"n8n Error Handling & Logging",
+          topics:"Error trigger • retry • fallback branches • logging to Sheets",
+          tags:["build"],
+          tasks:["Add an Error Trigger to a real workflow","Write errors to a Google Sheet","Send a Slack alert on failure"],
+          resources:[]
+        },
+        { day:39, label:"n8n Scheduling & Cron",
+          topics:"Schedule trigger • cron expressions • time zones",
+          tags:["build"],
+          tasks:["Build a daily report: fetch data → LLM summary → email/Telegram","Use cron: every weekday at 8 AM"],
+          resources:[]
+        },
+        { day:40, label:"n8n AI Nodes — LLM in Workflow",
+          topics:"LangChain nodes • AI Agent node • memory • tools in n8n",
+          tags:["build"],
+          tasks:["Build an AI customer reply workflow: incoming email → LLM draft reply → human approval → send","Test with 5 dummy emails"],
+          resources:[{label:"n8n AI nodes overview",url:"https://docs.n8n.io/integrations/builtin/cluster-nodes/"}]
+        },
+        { day:41, label:"Make (Integromat) Overview",
+          topics:"Make vs n8n • scenarios • modules • router • error handling",
+          tags:["theory","build"],
+          tasks:["Build the same Gmail→AI→Sheets workflow in Make","Compare: what's easier vs harder than n8n?","Note: when would a client prefer Make?"],
+          resources:[{label:"Make Academy",url:"https://www.make.com/en/learn"}]
+        },
+        { day:42, label:"Week 6 Project: Full Business Automation",
+          topics:"PDF Invoice arrives → extract data → LLM verify → push to accounting Notion DB → Slack notify",
+          tags:["project"],
+          tasks:["Build in n8n (or Python + n8n hybrid)","Handle errors, bad files, and missing fields","Write a client-style case study: problem, solution, ROI"],
+          resources:[]
+        },
+      ]
+    },
+    {
+      wLabel:"Week 7 — Advanced Automations & Portfolio",
+      days:[
+        { day:43, label:"Email Automation Patterns",
+          topics:"Sequences • drip campaigns • reply detection • bounce handling",
+          tags:["build"],
+          tasks:["Build a 3-email follow-up sequence triggered by a form submission","Skip emails if replied","Log sends to Google Sheets"],
+          resources:[]
+        },
+        { day:44, label:"CRM Automation: Deals Pipeline",
+          topics:"Stage changes • task creation • notifications • data enrichment",
+          tags:["build"],
+          tasks:["Simulate a CRM in Airtable","Automate: lead created → enrichment → score → stage set → sales alert"],
+          resources:[]
+        },
+        { day:45, label:"PDF & Document Automation",
+          topics:"Extract text from PDF • OCR concept • structure output • save to DB",
+          tags:["build"],
+          tasks:["Take a sample invoice PDF","Extract line items with LLM","Save structured data to Supabase or Google Sheets"],
+          resources:[{label:"PyMuPDF docs",url:"https://pymupdf.readthedocs.io/"}]
+        },
+        { day:46, label:"Upwork: Reading Real Job Postings",
+          topics:"How to find automation jobs • what clients say vs what they need • how to propose",
+          tags:["review"],
+          tasks:["Find 5 Upwork jobs for 'n8n automation'","For each: identify the real problem, your solution, estimated time","Write a sample proposal for 1"],
+          resources:[
+            {label:"Upwork AI & Automation Jobs",url:"https://www.upwork.com/nx/search/jobs/?q=n8n+automation"},
+          ]
+        },
+        { day:47, label:"Automation Testing & Validation",
+          topics:"Test with dummy data • edge cases • validate LLM outputs • logging",
+          tags:["build","review"],
+          tasks:["Create a test suite for your automation: 10 test cases","Log pass/fail","Fix any edge cases"],
+          resources:[]
+        },
+        { day:48, label:"Portfolio Project 2: AI Customer Support Bot",
+          topics:"Website chat → classify intent → answer from FAQ or escalate → log to CRM",
+          tags:["project"],
+          tasks:["Build with n8n + LLM + Google Sheets","Test with 20 sample messages","Document: hours saved per week, error rate vs human"],
+          resources:[]
+        },
+        { day:49, label:"Stage 3 Review & Freelance Pitch",
+          topics:"Review all automations • refine GitHub • prepare pitch",
+          tags:["review"],
+          tasks:["Clean up all GitHub repos","Write a 1-paragraph service description for Upwork","Record a 2-minute demo video of your best automation"],
+          resources:[]
+        },
+      ]
+    }
+  ]
+},
+{
+  id:"s4", label:"Stage 4: LLM Engineering", days:"Days 50–63",
+  goal:"Integrate LLMs professionally. Master prompt engineering, tool calling, and multi-provider usage.",
+  weeks:[
+    {
+      wLabel:"Week 8 — Prompt Engineering & LLM APIs",
+      days:[
+        { day:50, label:"Prompt Engineering Fundamentals",
+          topics:"System prompts • role • context • instructions • few-shot examples • chain-of-thought",
+          tags:["theory","build"],
+          tasks:["Write 5 system prompts for different use cases","A/B test each: what changes the output?","Document your best patterns"],
+          resources:[
+            {label:"Anthropic Prompt Engineering Guide",url:"https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"},
+            {label:"Prompt Engineering Guide – DAIR.AI",url:"https://www.promptingguide.ai/"},
+          ]
+        },
+        { day:51, label:"Structured Outputs & JSON Mode",
+          topics:"Force JSON output • Pydantic validation • parsing LLM responses reliably",
+          tags:["build"],
+          tasks:["Build a lead classifier that ALWAYS returns valid JSON","Add Pydantic validation","Handle malformed output gracefully"],
+          resources:[
+            {label:"Instructor library",url:"https://python.useinstructor.com/"},
+          ]
+        },
+        { day:52, label:"Tool Calling / Function Calling",
+          topics:"What tool calling is • defining tools • parsing tool calls • multi-step tool use",
+          tags:["build"],
+          tasks:["Give Claude/GPT a tool: search_leads(name, budget_min)","Call it and handle the tool_use response","Chain 2 tools: search → then qualify"],
+          resources:[
+            {label:"Anthropic Tool Use Docs",url:"https://docs.anthropic.com/en/docs/build-with-claude/tool-use"},
+          ]
+        },
+        { day:53, label:"Multi-Provider Strategy",
+          topics:"OpenAI • Anthropic • Gemini • DeepSeek • OpenRouter • cost vs quality",
+          tags:["theory","build"],
+          tasks:["Send the same prompt to 3 different providers","Compare: quality, cost per 1000 tokens, latency","Build a simple model router: use cheapest model for simple tasks"],
+          resources:[
+            {label:"OpenRouter Model Pricing",url:"https://openrouter.ai/models"},
+            {label:"Google Gemini API",url:"https://ai.google.dev/"},
+          ]
+        },
+        { day:54, label:"Context Management",
+          topics:"Context window limits • token counting • conversation history trimming • summarization",
+          tags:["build"],
+          tasks:["Build a chat interface that stores conversation history","Add token counting","Auto-summarize when history > 80% of context window"],
+          resources:[
+            {label:"tiktoken – OpenAI tokenizer",url:"https://github.com/openai/tiktoken"},
+          ]
+        },
+        { day:55, label:"LLM Cost Optimization",
+          topics:"Token budgets • caching • model selection • batch processing",
+          tags:["theory","build"],
+          tasks:["Calculate the monthly cost of your lead qualifier at 500 leads/day","Find 3 ways to reduce it by 50%","Implement one optimization"],
+          resources:[]
+        },
+        { day:56, label:"Week 8 Project: Intelligent Email Responder",
+          topics:"Classify email intent → route → draft response → human review queue",
+          tags:["project"],
+          tasks:["Build in Python: email in → JSON classification → response draft","Use tool calling for the routing step","Log all decisions"],
+          resources:[]
+        },
+      ]
+    },
+    {
+      wLabel:"Week 9 — Advanced LLM Patterns",
+      days:[
+        { day:57, label:"Evaluation & Testing LLM Outputs",
+          topics:"Eval datasets • LLM-as-judge • accuracy tracking • regression tests",
+          tags:["build"],
+          tasks:["Build 20 test cases for your lead qualifier","Evaluate outputs with another LLM call","Track accuracy score"],
+          resources:[{label:"PromptFoo – LLM evaluation",url:"https://promptfoo.dev/"}]
+        },
+        { day:58, label:"Hallucination Prevention",
+          topics:"Grounding • citation • output validation • confidence scores",
+          tags:["theory","build"],
+          tasks:["Find 3 places your LLM can hallucinate in your project","Add validation for each","Test: what happens with an intentionally bad input?"],
+          resources:[]
+        },
+        { day:59, label:"Streaming Responses",
+          topics:"stream=True • SSE • real-time output • UX benefits",
+          tags:["build"],
+          tasks:["Add streaming to your chat interface","Print tokens as they arrive","Measure: perceived latency before vs after"],
+          resources:[]
+        },
+        { day:60, label:"Prompt Injection Defence",
+          topics:"What prompt injection is • user input sanitization • system prompt protection",
+          tags:["theory","build"],
+          tasks:["Try 5 prompt injection attacks on your own system","Add input sanitization","Document what you defended against"],
+          resources:[{label:"OWASP LLM Top 10",url:"https://owasp.org/www-project-top-10-for-large-language-model-applications/"}]
+        },
+        { day:61, label:"Batch Processing with LLMs",
+          topics:"Parallel requests • concurrency • rate limit handling • progress tracking",
+          tags:["build"],
+          tasks:["Process 100 leads through your qualifier using concurrent.futures","Stay under API rate limits","Show a progress bar"],
+          resources:[]
+        },
+        { day:62, label:"Upwork: LLM Engineer Job Analysis",
+          topics:"What LLM engineering roles on Upwork look like • skills clients want most",
+          tags:["review"],
+          tasks:["Find 10 Upwork jobs mentioning GPT, Claude, or LLM","List top 5 skills they require","Note what your current portfolio covers vs gaps"],
+          resources:[{label:"Upwork LLM Jobs",url:"https://www.upwork.com/nx/search/jobs/?q=LLM+GPT"}]
+        },
+        { day:63, label:"Stage 4 Capstone: AI Content Generator",
+          topics:"Complete LLM pipeline: structured prompt → validation → batch → output",
+          tags:["project"],
+          tasks:["Build: product listing generator (takes SKU data → generates 5 variations → scores → saves best)","Full error handling, logging, cost tracking","Document ROI: hours saved vs manual writing"],
+          resources:[]
+        },
+      ]
+    }
+  ]
+},
+{
+  id:"s5", label:"Stage 5: RAG & Knowledge Systems", days:"Days 64–70",
+  goal:"Build production-quality document Q&A systems. Understand and implement RAG from scratch.",
+  weeks:[
+    {
+      wLabel:"Week 10 — RAG From Scratch",
+      days:[
+        { day:64, label:"Embeddings — Turning Text Into Numbers",
+          topics:"What embeddings are • cosine similarity • embedding models • dimensions",
+          tags:["theory","build"],
+          tasks:["Embed 10 sentences using OpenAI or HuggingFace","Find the 3 most similar to a query","Plot distances conceptually"],
+          resources:[
+            {label:"What are Embeddings? – Vicki Boykis",url:"https://vickiboykis.com/what_are_embeddings/"},
+          ]
+        },
+        { day:65, label:"Vector Databases: Supabase pgvector",
+          topics:"Setup Supabase • pgvector extension • store embeddings • similarity search",
+          tags:["build"],
+          tasks:["Create a Supabase project","Enable pgvector","Store 50 FAQ embeddings","Run a similarity search from Python"],
+          resources:[
+            {label:"Supabase Vector (pgvector) Guide",url:"https://supabase.com/docs/guides/ai"},
+          ]
+        },
+        { day:66, label:"RAG Pipeline: Chunking & Ingestion",
+          topics:"Chunking strategies • overlap • metadata • ingestion pipeline",
+          tags:["build"],
+          tasks:["Take a 10-page PDF • chunk it with overlap","Embed each chunk","Store with metadata in Supabase"],
+          resources:[
+            {label:"RAG from Scratch – LangChain",url:"https://www.youtube.com/watch?v=sVcwVQRHIc8"},
+          ]
+        },
+        { day:67, label:"RAG Pipeline: Retrieval & Generation",
+          topics:"Query → embed → search → retrieve chunks → LLM generate → cite sources",
+          tags:["build"],
+          tasks:["Build: ask a question → retrieve top 5 chunks → LLM answer with citations","Test with 10 questions","Measure: correct answers / 10"],
+          resources:[]
+        },
+        { day:68, label:"RAG Evaluation & Improvement",
+          topics:"Faithfulness • relevance • retrieval recall • hybrid search",
+          tags:["build","review"],
+          tasks:["Build 20 Q&A test pairs","Score your RAG: what % answered correctly?","Try one improvement: better chunking OR reranking"],
+          resources:[{label:"RAGAs evaluation framework",url:"https://docs.ragas.io/"}]
+        },
+        { day:69, label:"Docling & Document Loaders",
+          topics:"PDF, DOCX, HTML parsing • Docling • structure preservation",
+          tags:["build"],
+          tasks:["Ingest 3 different document types into your RAG system","Verify structure is preserved","Handle a scanned PDF with OCR"],
+          resources:[{label:"Docling by IBM",url:"https://github.com/DS4SD/docling"}]
+        },
+        { day:70, label:"Portfolio Project 4: Company Knowledge Base",
+          topics:"Full RAG system: upload docs → chunk → embed → query → cite",
+          tags:["project"],
+          tasks:["Build a simple web interface (Streamlit or Gradio)","Allow file upload + question answering","Deploy locally. Document: what companies would pay for this?"],
+          resources:[
+            {label:"Streamlit",url:"https://streamlit.io/"},
+            {label:"Gradio",url:"https://www.gradio.app/"},
+          ]
+        },
+      ]
+    }
+  ]
+},
+{
+  id:"s6", label:"Stage 6: AI Agents", days:"Days 71–77",
+  goal:"Build practical AI agents. Know when to use an agent vs a workflow.",
+  weeks:[
+    {
+      wLabel:"Week 11 — Agent Architecture",
+      days:[
+        { day:71, label:"Agent vs Workflow vs Chatbot",
+          topics:"What makes something an agent • planning • state • tool loops",
+          tags:["theory"],
+          tasks:["Draw: chatbot vs workflow vs agent on paper","List 5 tasks that NEED an agent, 5 that don't","Write: the trap of over-engineering with agents"],
+          resources:[
+            {label:"Anthropic – Building Effective Agents",url:"https://www.anthropic.com/research/building-effective-agents"},
+          ]
+        },
+        { day:72, label:"Tools & Memory in Agents",
+          topics:"Tool calling loop • short-term memory • long-term memory (DB) • state management",
+          tags:["build"],
+          tasks:["Build an agent with 3 tools: web_search, get_lead_info, qualify_lead","Let it reason through a multi-step qualification task","Log each tool call"],
+          resources:[]
+        },
+        { day:73, label:"Building a Research Agent",
+          topics:"Plan → search → read → synthesize → report",
+          tags:["build"],
+          tasks:["Build: give it a company name → researches via web → returns structured profile","Test with 5 companies","Check accuracy of findings"],
+          resources:[{label:"Tavily AI Search for agents",url:"https://tavily.com/"}]
+        },
+        { day:74, label:"Human-in-the-Loop Agents",
+          topics:"Approval gates • uncertainty thresholds • escalation • audit logs",
+          tags:["build"],
+          tasks:["Add: agent pauses and asks for approval before sending any email","Log every decision point","Test: force an uncertainty scenario"],
+          resources:[]
+        },
+        { day:75, label:"Agent Failure Modes & Guardrails",
+          topics:"Infinite loops • hallucinated tool calls • cost runaway • guardrails",
+          tags:["theory","build"],
+          tasks:["Add: max steps limit, budget limit, output validation to your agent","Deliberately trigger each failure • confirm it's handled","Document: what would go wrong in production?"],
+          resources:[]
+        },
+        { day:76, label:"n8n AI Agent Node",
+          topics:"n8n's built-in agent • LangChain in n8n • memory persistence",
+          tags:["build"],
+          tasks:["Rebuild your research agent using n8n AI Agent node","Compare: Python agent vs n8n agent — pros/cons","Decide: which would you deliver to a client?"],
+          resources:[{label:"n8n Agent Tutorial",url:"https://www.youtube.com/watch?v=1MwSoB0gnM4"}]
+        },
+        { day:77, label:"Portfolio Project 5: AI Research Agent",
+          topics:"Research agent: given a target company + job role → research + score + propose",
+          tags:["project"],
+          tasks:["Full agent: tools for web search, LinkedIn profile fetch, company info","Structured output: opportunity score, recommended approach","README: 'what would a Sales team pay for this?'"],
+          resources:[]
+        },
+      ]
+    }
+  ]
+},
+{
+  id:"s7", label:"Stage 7–8: Databases & Backend", days:"Days 78–84",
+  goal:"Design a production database. Build AI functionality as an actual API service.",
+  weeks:[
+    {
+      wLabel:"Week 12 — Databases + FastAPI",
+      days:[
+        { day:78, label:"SQL Fundamentals for AI Engineers",
+          topics:"SELECT, INSERT, UPDATE, DELETE • WHERE • JOIN • indexes • Supabase dashboard",
+          tags:["theory","build"],
+          tasks:["Create a leads table in Supabase","Write SQL: top 10 leads by score in last 7 days","Write SQL: join leads with their activities"],
+          resources:[{label:"SQLBolt – Interactive SQL",url:"https://sqlbolt.com/"}]
+        },
+        { day:79, label:"Supabase: The AI Engineer's Database",
+          topics:"Tables • RLS • Auth basics • Edge Functions • Real-time",
+          tags:["build"],
+          tasks:["Migrate your lead qualifier to use Supabase","All results stored in the DB","Add a basic query interface"],
+          resources:[{label:"Supabase Docs",url:"https://supabase.com/docs"}]
+        },
+        { day:80, label:"FastAPI Basics",
+          topics:"Routes • request/response models • Pydantic • startup/shutdown",
+          tags:["build"],
+          tasks:["Build a FastAPI app with 3 endpoints: POST /qualify, GET /leads, GET /leads/{id}","Test with Postman or curl","Add docstrings so Swagger UI works"],
+          resources:[{label:"FastAPI Full Tutorial",url:"https://fastapi.tiangolo.com/tutorial/"}]
+        },
+        { day:81, label:"Wrapping AI in an API",
+          topics:"Take your LLM pipeline → expose as REST endpoint → connect to DB",
+          tags:["build"],
+          tasks:["POST /qualify → calls LLM → saves to Supabase → returns JSON response","Add auth header (API key check)","Test with 10 requests"],
+          resources:[]
+        },
+        { day:82, label:"Background Tasks & Async",
+          topics:"BackgroundTasks in FastAPI • async/await • long-running jobs",
+          tags:["build"],
+          tasks:["Make /qualify non-blocking: returns job_id immediately","Process in background","GET /jobs/{id} returns status and result"],
+          resources:[]
+        },
+        { day:83, label:"Logging & Monitoring",
+          topics:"structlog • request logging • error tracking • health endpoint",
+          tags:["build"],
+          tasks:["Add structured logging to your FastAPI app","Log: timestamp, endpoint, input summary, output summary, cost","Add GET /health endpoint"],
+          resources:[{label:"Loguru – Python logging",url:"https://loguru.readthedocs.io/"}]
+        },
+        { day:84, label:"Week 12 Project: AI Service API",
+          topics:"Production-ready FastAPI: qualifier + knowledge base query + lead enrichment",
+          tags:["project"],
+          tasks:["3 endpoints, Supabase DB, API key auth, logging, health check","Write an OpenAPI spec in Swagger","Document: what would a developer client pay to use this API?"],
+          resources:[]
+        },
+      ]
+    }
+  ]
+},
+{
+  id:"s8", label:"Stage 9–10: Deploy & Production", days:"Days 85–90",
+  goal:"Deploy your own AI application. Build systems safe and reliable enough for real clients.",
+  weeks:[
+    {
+      wLabel:"Week 13 — Ship It",
+      days:[
+        { day:85, label:"Linux & VPS Basics",
+          topics:"SSH • file system • systemd • nginx basics • UFW firewall",
+          tags:["build"],
+          tasks:["Spin up a $5 VPS (DigitalOcean, Hetzner, or Railway)","SSH in • create a deploy user • set up UFW","Deploy your FastAPI app manually"],
+          resources:[
+            {label:"DigitalOcean Droplet Quickstart",url:"https://docs.digitalocean.com/products/droplets/quickstart/"},
+            {label:"Railway (simple deploy)",url:"https://railway.app/"},
+          ]
+        },
+        { day:86, label:"Docker Fundamentals",
+          topics:"Dockerfile • image • container • docker-compose • volumes",
+          tags:["build"],
+          tasks:["Dockerize your FastAPI app","Write docker-compose.yml with app + postgres","Run locally, then push image to Docker Hub"],
+          resources:[{label:"Docker in 100 Seconds – Fireship",url:"https://www.youtube.com/watch?v=Gjnup-PuquQ"}]
+        },
+        { day:87, label:"CI/CD with GitHub Actions",
+          topics:"Push to deploy • automated tests • secrets in GitHub Actions",
+          tags:["build"],
+          tasks:["Write a GitHub Action: on push to main → run tests → deploy to VPS","Add your API key as a GitHub secret","Test the full pipeline"],
+          resources:[{label:"GitHub Actions Docs",url:"https://docs.github.com/en/actions"}]
+        },
+        { day:88, label:"Security Hardening",
+          topics:"Env vars in prod • HTTPS • CORS • input validation • secrets rotation",
+          tags:["theory","build"],
+          tasks:["Add HTTPS with Let's Encrypt (Caddy or Certbot)","Audit your app: are any secrets in code?","Add CORS whitelist to FastAPI"],
+          resources:[]
+        },
+        { day:89, label:"Final Capstone Build",
+          topics:"End-to-end professional project: AI Lead Qualification Platform",
+          tags:["project"],
+          tasks:["Frontend: simple HTML form (or Streamlit)","Backend: FastAPI","AI: LLM qualifier + RAG for product info","DB: Supabase","Deployed: with HTTPS on VPS","Documented: README, architecture diagram, case study"],
+          resources:[]
+        },
+        { day:90, label:"🎓 Job-Ready Audit & Launch",
+          topics:"Portfolio review • Upwork profile • first proposal • mock client call",
+          tags:["review","project"],
+          tasks:["List all 5+ portfolio projects with GitHub links","Write your Upwork profile bio using the outcomes framework","Send your first 5 proposals on Upwork","Record a 3-minute portfolio walkthrough video","CELEBRATE — you went from zero to AI engineer."],
+          resources:[
+            {label:"Upwork Profile Best Practices",url:"https://www.upwork.com/resources/how-to-set-up-an-upwork-profile"},
+          ]
+        },
+      ]
+    }
+  ]
+},
+];
+
+/* ═════════════════════════════════════════════════════════════════════════
+   STATE — stored in localStorage
+   ════════════════════════════════════════════════════════════════════════ */
+const LS_KEY = "ai_journey_v2";
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; }
+}
+function saveState(s) {
+  localStorage.setItem(LS_KEY, JSON.stringify(s));
+}
+
+let state = loadState(); // { "day:1": true, "day:5": true, ... }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   RENDER
+   ════════════════════════════════════════════════════════════════════════ */
+function getDayKey(d) { return `day:${d}`; }
+function isDone(d) { return !!state[getDayKey(d)]; }
+
+function toggleDay(d) {
+  const k = getDayKey(d);
+  state[k] = !state[k];
+  saveState(state);
+  renderAll();
+}
+
+function resetAll() {
+  if (!confirm("Reset ALL progress? This cannot be undone.")) return;
+  state = {};
+  saveState(state);
+  renderAll();
+}
+
+function totalDays() {
+  return stages.reduce((a, s) => a + s.weeks.reduce((b, w) => b + w.days.length, 0), 0);
+}
+
+function countDone() {
+  return Object.values(state).filter(Boolean).length;
+}
+
+function buildNav() {
+  const nav = document.getElementById("stageNav");
+  nav.innerHTML = stages.map(st => {
+    const allD = st.weeks.flatMap(w => w.days.map(d => d.day));
+    const done = allD.filter(d => isDone(d)).length;
+    const pct = Math.round(done / allD.length * 100);
+    let cls = "stage-link";
+    if (done === allD.length) cls += " done-nav";
+    return `<div class="${cls}" onclick="scrollToStage('${st.id}')">
+      <div class="stage-dot"></div>
+      <span>${st.label}</span>
+      <span class="stage-pct">${pct}%</span>
+    </div>`;
+  }).join("");
+}
+
+function scrollToStage(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+}
+
+function buildContent() {
+  const container = document.getElementById("stageContent");
+  container.innerHTML = stages.map((st, si) => {
+    const allD = st.weeks.flatMap(w => w.days.map(d => d.day));
+    const done = allD.filter(d => isDone(d)).length;
+    const allDone = done === allD.length;
+    const badgeCls = allDone ? "badge-done" : done > 0 ? "badge-active" : "badge-locked";
+    const badgeTxt = allDone ? "✓ Complete" : done > 0 ? "In Progress" : "Upcoming";
+
+    const weeksHtml = st.weeks.map((wk, wi) => {
+      const wDays = wk.days.map(d => d.day);
+      const wDone = wDays.filter(d => isDone(d)).length;
+      const wPct = Math.round(wDone / wDays.length * 100);
+
+      const daysHtml = wk.days.map(day => {
+        const done = isDone(day.day);
+        const cardCls = done ? "day-card completed" : "day-card";
+        const tags = (day.tags || []).map(t => `<span class="tag tag-${t}">${t}</span>`).join("");
+        const taskItems = (day.tasks || []).map(t => `<div class="task-item"><span class="task-bullet">▸</span><span>${t}</span></div>`).join("");
+        const resItems = (day.resources || []).map(r =>
+          `<a class="resource-link" href="${r.url}" target="_blank" rel="noopener">▶ ${r.label}</a>`
+        ).join("");
+        const resBlock = resItems ? `<div class="resources-block"><div class="resources-title">📎 Resources</div>${resItems}</div>` : "";
+
+        return `<div class="${cardCls}" id="day${day.day}">
+          <div class="day-top">
+            <div class="day-check" onclick="toggleDay(${day.day})">${done ? "✓" : ""}</div>
+            <div class="day-info">
+              <div class="day-label">Day ${day.day}: ${day.label}</div>
+              <div class="day-topics">${day.topics}</div>
+              <div class="day-meta">
+                ${tags}
+                <button class="day-expand-btn" onclick="toggleExpand(this, ${day.day})">
+                  <span>▸</span> Show tasks & resources
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="task-list">
+            ${taskItems}
+            ${resBlock}
+          </div>
+        </div>`;
+      }).join("");
+
+      return `<div class="week-block" id="week${si}_${wi}">
+        <div class="week-header" onclick="toggleWeek('week${si}_${wi}')">
+          <span class="week-label">${wk.wLabel}</span>
+          <div class="week-prog-wrap">
+            <div class="week-prog-bar"><div class="week-prog-fill" style="width:${wPct}%"></div></div>
+            <span class="week-pct-lbl">${wPct}%</span>
+          </div>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="week-body">${daysHtml}</div>
+      </div>`;
+    }).join("");
+
+    return `<div class="stage-section" id="${st.id}">
+      <div class="stage-header">
+        <span class="stage-badge ${badgeCls}">${badgeTxt}</span>
+        <span class="stage-title">${st.label}</span>
+        <span class="stage-subtitle">${st.days} · ${done}/${allD.length} days</span>
+      </div>
+      <div class="stage-goal"><strong>🎯 Goal:</strong> ${st.goal}</div>
+      ${weeksHtml}
+    </div>${si < stages.length - 1 ? '<hr class="stage-divider">' : ""}`;
+  }).join("");
+}
+
+function toggleWeek(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle("open");
+}
+
+function toggleExpand(btn, dayNum) {
+  const card = document.getElementById("day" + dayNum);
+  card.classList.toggle("expanded");
+  const isOpen = card.classList.contains("expanded");
+  btn.innerHTML = `<span>${isOpen ? "▾" : "▸"}</span> ${isOpen ? "Hide" : "Show"} tasks & resources`;
+}
+
+function updateStats() {
+  const done = countDone();
+  const total = totalDays();
+  const pct = Math.round(done / total * 100);
+
+  document.getElementById("globalFill").style.width = pct + "%";
+  document.getElementById("globalPct").textContent = pct + "%";
+  document.getElementById("statDays").textContent = done;
+  document.getElementById("statTotal").textContent = total;
+
+  // streak: count consecutive done days from day 1
+  let streak = 0;
+  for (let d = 1; d <= total; d++) {
+    if (isDone(d)) streak++;
+    else break;
+  }
+  document.getElementById("statStreak").textContent = streak + "🔥";
+}
+
+function renderAll() {
+  buildNav();
+  buildContent();
+  updateStats();
+  // re-open weeks that have at least one done day
+  stages.forEach((st, si) => {
+    st.weeks.forEach((wk, wi) => {
+      const hasDone = wk.days.some(d => isDone(d.day));
+      const hasUndone = wk.days.some(d => !isDone(d.day));
+      if (hasDone && hasUndone) {
+        document.getElementById(`week${si}_${wi}`)?.classList.add("open");
+      }
+    });
+  });
+  // open first week of first incomplete stage
+  for (let si = 0; si < stages.length; si++) {
+    const st = stages[si];
+    const allDone = st.weeks.flatMap(w => w.days).every(d => isDone(d.day));
+    if (!allDone) {
+      document.getElementById(`week${si}_0`)?.classList.add("open");
+      break;
+    }
+  }
+}
+
+renderAll();
+</script>
+</body>
+</html>
